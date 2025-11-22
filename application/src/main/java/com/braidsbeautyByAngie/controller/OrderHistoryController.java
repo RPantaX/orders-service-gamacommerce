@@ -2,7 +2,7 @@ package com.braidsbeautyByAngie.controller;
 
 import com.braidsbeautyByAngie.aggregates.dto.ShopOrderHistoryDTO;
 import com.braidsbeautyByAngie.ports.in.ShopOrderHistoryServiceIn;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.util.ApiResponse;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.util.ApiResponse;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import lombok.RequiredArgsConstructor;

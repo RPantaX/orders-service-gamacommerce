@@ -5,7 +5,7 @@ import com.braidsbeautyByAngie.aggregates.dto.SalesAnalyticsDTO;
 import com.braidsbeautyByAngie.aggregates.dto.TodayTransactionDTO;
 import com.braidsbeautyByAngie.aggregates.dto.TopProductDTO;
 import com.braidsbeautyByAngie.ports.in.DashboardServiceIn;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.util.ApiResponse;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.util.ApiResponse;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Info;

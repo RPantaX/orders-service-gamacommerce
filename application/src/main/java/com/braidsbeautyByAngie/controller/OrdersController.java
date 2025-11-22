@@ -2,8 +2,8 @@ package com.braidsbeautyByAngie.controller;
 
 import com.braidsbeautyByAngie.aggregates.request.RequestShopOrder;
 import com.braidsbeautyByAngie.ports.in.ShopOrderServiceIn;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.Constants;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.util.ApiResponse;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.Constants;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.util.ApiResponse;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Info;

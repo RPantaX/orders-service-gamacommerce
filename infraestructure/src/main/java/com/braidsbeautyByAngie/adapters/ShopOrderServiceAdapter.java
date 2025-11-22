@@ -37,13 +37,13 @@ import com.braidsbeautyByAngie.repository.ShoppingMethodRepository;
 import com.braidsbeautyByAngie.rest.RestPaymentAdapter;
 import com.braidsbeautyByAngie.rest.RestProductsAdapter;
 import com.braidsbeautyByAngie.rest.RestServicesAdapter;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.AppExceptions.AppExceptionNotFound;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.Constants;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.events.OrderApprovedEvent;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.events.OrderCreatedEvent;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.requests.RequestProductsEvent;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.AppExceptions.AppExceptionNotFound;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.Constants;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.events.OrderApprovedEvent;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.events.OrderCreatedEvent;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.requests.RequestProductsEvent;
 
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.util.ValidateUtil;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.util.ValidateUtil;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -317,7 +317,6 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
 
         OrderApprovedEvent event = OrderApprovedEvent.builder()
                 .shopOrderId(shopOrderEntity.getShopOrderId())
-                .isService(isService)
                 .isProduct(isProduct)
                 .build();
         log.info("Sending Order Approved Event: {}", event);
@@ -335,15 +334,10 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
                         .quantity(product.getProductQuantity())
                         .build())
                 .toList();
-        Long reservationId = null;
-        if (requestShopOrder.getReservationId() != null && requestShopOrder.getReservationId() > 0) {
-            reservationId = requestShopOrder.getReservationId();
-        }
         return OrderCreatedEvent.builder()
                 .shopOrderId(shopOrderEntity.getShopOrderId())
                 .customerId(shopOrderEntity.getUserId())
                 .requestProductsEventList(productEvents)
-                .reservationId(reservationId)
                 .build();
     }
 
