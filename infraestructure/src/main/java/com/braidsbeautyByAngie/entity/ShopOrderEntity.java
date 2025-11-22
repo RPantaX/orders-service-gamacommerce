@@ -28,6 +28,9 @@ public class ShopOrderEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "shop_order_status", nullable = false)
     private ShopOrderStatusEnum shopOrderStatus;
+    @Column(name = "company_id", nullable = false)
+    private Long companyId;
+
     @Column(name = "user_id", nullable = false)
     private Long userId;
 

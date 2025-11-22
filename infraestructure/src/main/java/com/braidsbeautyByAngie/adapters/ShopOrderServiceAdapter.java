@@ -37,17 +37,13 @@ import com.braidsbeautyByAngie.repository.ShoppingMethodRepository;
 import com.braidsbeautyByAngie.rest.RestPaymentAdapter;
 import com.braidsbeautyByAngie.rest.RestProductsAdapter;
 import com.braidsbeautyByAngie.rest.RestServicesAdapter;
-import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.AppExceptions.AppExceptionNotFound;
 import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.Constants;
 import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.events.OrderApprovedEvent;
 import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.events.OrderCreatedEvent;
 import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.requests.RequestProductsEvent;
 
 import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.util.ValidateUtil;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -56,9 +52,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -116,30 +109,20 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
         ShopOrderEntity shopOrderEntity = new ShopOrderEntity();
         shopOrderEntity.setShopOrderDate(Constants.getTimestamp());
         shopOrderEntity.setCreatedAt(Constants.getTimestamp());
-        shopOrderEntity.setModifiedByUser("TEST-CREATED");
+        shopOrderEntity.setModifiedByUser(com.braidsbeautyByAngie.aggregates.constants.Constants.getUserInSession());
         shopOrderEntity.setUserId(requestShopOrder.getUserId());
         shopOrderEntity.setShopOrderStatus(ShopOrderStatusEnum.CREATED);
-
+        shopOrderEntity.setCompanyId(requestShopOrder.getCompanyId());
         ShoppingMethodEntity shoppingMethod = fetchShoppingMethod(requestShopOrder.getShoppingMethodId());
         shopOrderEntity.setShoppingMethodEntity(shoppingMethod);
 
         List<OrderLineEntity> orderLines = new ArrayList<>();
 
-        if (hasProductsAndReservation(requestShopOrder)) {
-            AddressEntity addressSaved =  saveAndLinkAddress(requestShopOrder);
-            shopOrderEntity.setAddressEntity(addressSaved);
-            orderLines.addAll(saveProducts(requestShopOrder.getProductRequestList()));
-            orderLines.add(saveReservation(requestShopOrder.getReservationId()));
-            log.info("Shop Order with Products and Reservation: {}", requestShopOrder);
-        } else if (hasOnlyReservation(requestShopOrder)) {
-            orderLines.add(saveReservation(requestShopOrder.getReservationId()));
-            log.info("Shop Order with Reservation only: {}", requestShopOrder);
-        } else if (hasOnlyProducts(requestShopOrder)) {
             AddressEntity addressSaved =  saveAndLinkAddress(requestShopOrder);
             shopOrderEntity.setAddressEntity(addressSaved);
             orderLines.addAll(saveProducts(requestShopOrder.getProductRequestList()));
             log.info("Shop Order with Products only: {}", requestShopOrder);
-        }
+
         ShopOrderEntity savedShopOrder = shopOrderRepository.save(shopOrderEntity);
         log.info("Shop Order saved: {}", savedShopOrder);
 
@@ -254,18 +237,6 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
             ValidateUtil.requerido(shoppingMethod, OrdersErrorEnum.SHOPPING_METHOD_NOT_FOUND_ERSM00017);
         }
         return shoppingMethod;
-    }
-
-    private boolean hasProductsAndReservation(RequestShopOrder requestShopOrder) {
-        return !requestShopOrder.getProductRequestList().isEmpty() && requestShopOrder.getReservationId() != null && requestShopOrder.getReservationId() > 0;
-    }
-
-    private boolean hasOnlyReservation(RequestShopOrder requestShopOrder) {
-        return requestShopOrder.getProductRequestList().isEmpty() && requestShopOrder.getReservationId() != null && requestShopOrder.getReservationId() > 0;
-    }
-
-    private boolean hasOnlyProducts(RequestShopOrder requestShopOrder) {
-        return !requestShopOrder.getProductRequestList().isEmpty() && (requestShopOrder.getReservationId() == null || requestShopOrder.getReservationId() <= 0);
     }
 
     private AddressEntity saveAndLinkAddress(RequestShopOrder requestShopOrder) {
