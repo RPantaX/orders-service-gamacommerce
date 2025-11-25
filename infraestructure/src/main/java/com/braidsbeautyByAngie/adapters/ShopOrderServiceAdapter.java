@@ -166,7 +166,7 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
     public ResponseListPageableShopOrder getShopOrderListByCompanyIdOut(int pageNumber, int pageSize, String orderBy, String sortDir, Long companyId) {
         log.info("Fetching Shop Order List");
         Pageable pageable = PageRequest.of(pageNumber, pageSize, resolveSort(orderBy, sortDir));
-        Page<ShopOrderEntity> shopOrderPage = shopOrderRepository.findAllByCompanyId(companyId, pageable);
+        Page<ShopOrderEntity> shopOrderPage = shopOrderRepository.findAllByCompanyId(com.braidsbeautyByAngie.aggregates.constants.Constants.getCompanyIdInSession(), pageable);
 
         List<ResponseShopOrder> responseList = shopOrderPage.getContent().stream()
                 .map(this::mapToResponseShopOrder)
