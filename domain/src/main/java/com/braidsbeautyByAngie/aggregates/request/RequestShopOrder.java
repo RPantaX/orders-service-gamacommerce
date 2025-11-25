@@ -15,5 +15,4 @@ public class RequestShopOrder {
     private Long userId;
     private RequestAdress requestAdress;
     private Long shoppingMethodId;
-    private Long companyId;
 }

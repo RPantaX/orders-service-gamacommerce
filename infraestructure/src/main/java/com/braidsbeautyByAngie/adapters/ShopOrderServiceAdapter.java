@@ -112,7 +112,7 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
         shopOrderEntity.setModifiedByUser(com.braidsbeautyByAngie.aggregates.constants.Constants.getUserInSession());
         shopOrderEntity.setUserId(requestShopOrder.getUserId());
         shopOrderEntity.setShopOrderStatus(ShopOrderStatusEnum.CREATED);
-        shopOrderEntity.setCompanyId(requestShopOrder.getCompanyId());
+        shopOrderEntity.setCompanyId(com.braidsbeautyByAngie.aggregates.constants.Constants.getCompanyIdInSession());
         ShoppingMethodEntity shoppingMethod = fetchShoppingMethod(requestShopOrder.getShoppingMethodId());
         shopOrderEntity.setShoppingMethodEntity(shoppingMethod);
 
@@ -145,6 +145,28 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
         log.info("Fetching Shop Order List");
         Pageable pageable = PageRequest.of(pageNumber, pageSize, resolveSort(orderBy, sortDir));
         Page<ShopOrderEntity> shopOrderPage = shopOrderRepository.findAll(pageable);
+
+        List<ResponseShopOrder> responseList = shopOrderPage.getContent().stream()
+                .map(this::mapToResponseShopOrder)
+                .toList();
+        if (responseList.isEmpty()) {
+            log.info("Shop Order List is Empty");
+        }
+        return ResponseListPageableShopOrder.builder()
+                .responseShopOrderList(responseList)
+                .pageNumber(shopOrderPage.getNumber())
+                .totalElements(shopOrderPage.getTotalElements())
+                .totalPages(shopOrderPage.getTotalPages())
+                .pageSize(shopOrderPage.getSize())
+                .end(shopOrderPage.isLast())
+                .build();
+    }
+
+    @Override
+    public ResponseListPageableShopOrder getShopOrderListByCompanyIdOut(int pageNumber, int pageSize, String orderBy, String sortDir, Long companyId) {
+        log.info("Fetching Shop Order List");
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, resolveSort(orderBy, sortDir));
+        Page<ShopOrderEntity> shopOrderPage = shopOrderRepository.findAllByCompanyId(companyId, pageable);
 
         List<ResponseShopOrder> responseList = shopOrderPage.getContent().stream()
                 .map(this::mapToResponseShopOrder)
@@ -270,20 +292,6 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
                 .orderLineState(OrderLineStatusEnum.CREATED)
                 .build();
     }
-
-    private OrderLineEntity saveReservation(Long reservationId) {
-        double initialPrice = 00.00;
-        int initialQuantity = 1;
-        return OrderLineEntity.builder()
-                .reservationId(reservationId)
-                .orderLineQuantity(initialQuantity)
-                .orderLinePrice(initialPrice)
-                .orderLineTotal(initialPrice)
-                .orderLineState(OrderLineStatusEnum.CREATED)
-                .build();
-    }
-
-
     private void sendOrderApprovedEvent(ShopOrderEntity shopOrderEntity, boolean isProduct, boolean isService) {
 
         OrderApprovedEvent event = OrderApprovedEvent.builder()

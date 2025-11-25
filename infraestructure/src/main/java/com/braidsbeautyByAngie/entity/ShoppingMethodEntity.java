@@ -21,7 +21,9 @@ public class ShoppingMethodEntity {
     private String shoppingMethodName;
     @Column(name = "shopping_method_price", nullable = false)
     private Double shoppingMethodPrice;
-
+    //shopping_method_delivery_time
+    @Column(name = "shopping_method_delivery_time", nullable = false)
+    private String shoppingMethodDeliveryTime;
     @Column(name = "state", nullable = false)
     private Boolean state;
 

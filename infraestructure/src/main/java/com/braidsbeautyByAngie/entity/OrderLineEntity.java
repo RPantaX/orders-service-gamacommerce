@@ -28,17 +28,8 @@ public class OrderLineEntity {
 
     @Column(name="product_item_id", nullable = true)
     private Long productItemId;
-    @Column(name="reservation_id", nullable = true)
-    private Long reservationId;
-
-    @Column(name="guia_remision_id", nullable = true)
-    private Long guiaRemisionId;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "shop_order_id", nullable = true)
     private ShopOrderEntity shopOrderEntity;
-
-    @ManyToOne(optional = true)
-    @JoinColumn(name = "factura_numero", nullable = true)
-    private FacturaEntity facturaEntity;
 }

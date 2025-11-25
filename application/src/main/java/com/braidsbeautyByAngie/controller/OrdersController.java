@@ -36,6 +36,17 @@ public class OrdersController {
                 service.getShopOrderListIn(pageNo, pageSize, sortBy, sortDir)));
     }
 
+    @Operation(summary = "Get all orders by company Id")
+    @RequestMapping("/list/company/{companyId}")
+    public ResponseEntity<ApiResponse> listOrdersbyCompanyId(@RequestParam(value = "pageNo", defaultValue = Constants.NUM_PAG_BY_DEFECT, required = false) int pageNo,
+                                                  @RequestParam(value = "pageSize", defaultValue = Constants.SIZE_PAG_BY_DEFECT, required = false) int pageSize,
+                                                  @RequestParam(value = "sortBy", defaultValue = Constants.ORDER_BY_DEFECT_ALL, required = false) String sortBy,
+                                                  @RequestParam(value = "sortDir", defaultValue = Constants.ORDER_DIRECT_BY_DEFECT, required = false) String sortDir,
+                                                             @PathVariable(name = "companyId") Long companyId){
+        return ResponseEntity.ok(ApiResponse.ok("List of orders retrieved successfully",
+                service.getShopOrderListByCompanyIdIn(pageNo, pageSize, sortBy, sortDir, companyId)));
+    }
+
     @Operation(summary = "Generate order")
     @RequestMapping()
     public ResponseEntity<ApiResponse> generateOrder(@RequestBody RequestShopOrder requestShopOrder){
