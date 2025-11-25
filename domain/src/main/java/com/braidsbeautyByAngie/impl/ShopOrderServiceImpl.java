@@ -38,6 +38,11 @@ public class ShopOrderServiceImpl implements ShopOrderServiceIn {
     }
 
     @Override
+    public ResponseListPageableShopOrder getShopOrderListByCompanyIdIn(int pageNumber, int pageSize, String orderBy, String sortDir, Long companyId) {
+        return serviceOut.getShopOrderListByCompanyIdOut(pageNumber, pageSize, orderBy, sortDir, companyId);
+    }
+
+    @Override
     public ResponseShopOrderDetail findShopOrderByIdIn(Long orderId){
         return serviceOut.findShopOrderByIdOut(orderId);
     }

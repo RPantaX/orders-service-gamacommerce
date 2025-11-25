@@ -1,8 +1,8 @@
 package com.braidsbeautyByAngie.adapters.handler;
 
 import com.braidsbeautyByAngie.ports.in.ShopOrderServiceIn;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.commands.ApproveOrderCommand;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.commands.RejectOrderCommand;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.commands.ApproveOrderCommand;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.commands.RejectOrderCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;

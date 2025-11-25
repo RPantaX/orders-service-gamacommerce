@@ -83,8 +83,8 @@
 
         <!--CORE PROJECT -->
         <dependency>
-            <groupId>com.braidsbeautyByAngie</groupId>
-            <artifactId>saga-pattern-spring-boot</artifactId>
+            <groupId>pe.com.gamacommerce</groupId>
+            <artifactId>core-library-service-gamacommerce</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <!-- Eureka Client -->

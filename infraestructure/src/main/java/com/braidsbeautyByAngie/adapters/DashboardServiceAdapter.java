@@ -411,12 +411,7 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
     private String determineOrderType(ShopOrderEntity order) {
         boolean hasProducts = order.getOrderLineEntities().stream()
                 .anyMatch(ol -> ol.getProductItemId() != null);
-        boolean hasServices = order.getOrderLineEntities().stream()
-                .anyMatch(ol -> ol.getReservationId() != null);
-
-        if (hasProducts && hasServices) return "Mixed";
         if (hasProducts) return "Product";
-        if (hasServices) return "Service";
         return "Unknown";
     }
 

@@ -1,7 +1,7 @@
 package com.braidsbeautyByAngie.aggregates.constants;
 
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.AppExceptions.TypeException;
-import com.braidsbeautybyangie.sagapatternspringboot.aggregates.aggregates.util.GenericError;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.AppExceptions.TypeException;
+import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.util.GenericError;
 
 public enum OrdersErrorEnum implements GenericError {
     //Generic Errors

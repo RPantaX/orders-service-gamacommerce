@@ -16,6 +16,7 @@ public class ShopOrderDTO {
     private Double shopOrderTotal;
     private ShopOrderStatusEnum shopOrderStatus;
     private Long userId;
+    private Long companyId;
     private Long paymentMethodId;
 
 }

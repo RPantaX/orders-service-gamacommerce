@@ -12,7 +12,6 @@ import java.util.List;
 @Getter
 public class RequestShopOrder {
     private List<ProductRequest> productRequestList;
-    private Long reservationId;
     private Long userId;
     private RequestAdress requestAdress;
     private Long shoppingMethodId;
