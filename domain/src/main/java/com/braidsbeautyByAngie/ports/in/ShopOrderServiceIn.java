@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 public interface ShopOrderServiceIn {
 
     void rejectShopOrderIn(Long orderId);
-    void aprovedShopOrderIn(Long orderId, BigDecimal paymentTotalPrice , boolean isProduct, boolean isService);
+    void aprovedShopOrderIn(Long orderId, BigDecimal paymentTotalPrice , boolean isProduct);
     ShopOrderDTO createShopOrderIn(RequestShopOrder requestShopOrder);
     ResponseListPageableShopOrder getShopOrderListIn(int pageNumber, int pageSize, String orderBy, String sortDir);
     ResponseListPageableShopOrder getShopOrderListByCompanyIdIn(int pageNumber, int pageSize, String orderBy, String sortDir, Long companyId);

@@ -4,7 +4,6 @@ import com.braidsbeautyByAngie.aggregates.dto.AddressDTO;
 import com.braidsbeautyByAngie.aggregates.dto.OrderLineDTO;
 import com.braidsbeautyByAngie.aggregates.response.rest.payments.PaymentDTO;
 import com.braidsbeautyByAngie.aggregates.response.rest.products.ResponseProductItemDetail;
-import com.braidsbeautyByAngie.aggregates.response.rest.reservations.ResponseReservationDetail;
 import com.braidsbeautyByAngie.aggregates.types.ShopOrderStatusEnum;
 import lombok.*;
 
@@ -25,5 +24,4 @@ public class ResponseShopOrderDetail {
     private PaymentDTO paymentDTO;
     private List<OrderLineDTO> orderLineDTOList;
     private List<ResponseProductItemDetail> responseProductItemDetailList;
-    private ResponseReservationDetail responseReservationDetail;
 }

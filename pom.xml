@@ -149,6 +149,7 @@
         </repository>
 
         <!-- GitHub Packages SOLO para braidsbeautyByAngie -->
+        <!--
         <repository>
             <id>github</id>
             <url>https://maven.pkg.github.com/RPantaX/core-service-braidsbeautyByAngie</url>
@@ -166,7 +167,7 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
-        </repository>
+        </repository> -->
     </repositories>
     <build>
         <plugins>

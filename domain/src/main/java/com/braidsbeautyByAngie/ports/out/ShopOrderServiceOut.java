@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 
 public interface ShopOrderServiceOut {
     void rejectShopOrderOut(Long orderId);
-    void aprovedShopOrderOut(Long orderId, BigDecimal paymentTotalPrice, boolean isProduct, boolean isService);
+    void aprovedShopOrderOut(Long orderId, BigDecimal paymentTotalPrice, boolean isProduct);
     ShopOrderDTO createShopOrderOut(RequestShopOrder requestShopOrder);
     ResponseListPageableShopOrder getShopOrderListOut(int pageNumber, int pageSize, String orderBy, String sortDir);
     ResponseListPageableShopOrder getShopOrderListByCompanyIdOut(int pageNumber, int pageSize, String orderBy, String sortDir, Long companyId);

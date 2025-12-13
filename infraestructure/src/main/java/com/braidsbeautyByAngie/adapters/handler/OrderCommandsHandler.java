@@ -18,7 +18,7 @@ public class OrderCommandsHandler {
 
     @KafkaHandler
     public void handleCommand(@Payload ApproveOrderCommand command){
-        service.aprovedShopOrderIn(command.getShopOrderId(),command.getPaymentTotalPrice() ,command.getIsProduct(), command.getIsService());
+        service.aprovedShopOrderIn(command.getShopOrderId(),command.getPaymentTotalPrice() ,command.getIsProduct());
     }
     @KafkaHandler
     public void handleCommand(@Payload RejectOrderCommand command){

@@ -23,8 +23,8 @@ public class ShopOrderServiceImpl implements ShopOrderServiceIn {
     }
 
     @Override
-    public void aprovedShopOrderIn(Long orderId, BigDecimal paymentTotalPrice , boolean isProduct, boolean isService) {
-        serviceOut.aprovedShopOrderOut(orderId,paymentTotalPrice ,isProduct, isService );
+    public void aprovedShopOrderIn(Long orderId, BigDecimal paymentTotalPrice , boolean isProduct) {
+        serviceOut.aprovedShopOrderOut(orderId,paymentTotalPrice ,isProduct);
     }
 
     @Override
