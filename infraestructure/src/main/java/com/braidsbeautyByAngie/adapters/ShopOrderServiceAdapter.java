@@ -101,15 +101,15 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
 
     @Transactional
     @Override
-    public ShopOrderDTO createShopOrderOut(RequestShopOrder requestShopOrder) {
+    public ShopOrderDTO createShopOrderOut(RequestShopOrder requestShopOrder, Long companyId) {
         log.info("Creating Shop Order: {}", requestShopOrder);
         ShopOrderEntity shopOrderEntity = new ShopOrderEntity();
         shopOrderEntity.setShopOrderDate(Constants.getTimestamp());
         shopOrderEntity.setCreatedAt(Constants.getTimestamp());
-        shopOrderEntity.setModifiedByUser(com.braidsbeautyByAngie.aggregates.constants.Constants.getUserInSession());
+        shopOrderEntity.setModifiedByUser("SYSTEM");
         shopOrderEntity.setUserId(requestShopOrder.getUserId());
         shopOrderEntity.setShopOrderStatus(ShopOrderStatusEnum.CREATED);
-        shopOrderEntity.setCompanyId(com.braidsbeautyByAngie.aggregates.constants.Constants.getCompanyIdInSession());
+        shopOrderEntity.setCompanyId(companyId);
         ShoppingMethodEntity shoppingMethod = fetchShoppingMethod(requestShopOrder.getShoppingMethodId());
         shopOrderEntity.setShoppingMethodEntity(shoppingMethod);
 
@@ -163,7 +163,7 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
     public ResponseListPageableShopOrder getShopOrderListByCompanyIdOut(int pageNumber, int pageSize, String orderBy, String sortDir, Long companyId) {
         log.info("Fetching Shop Order List");
         Pageable pageable = PageRequest.of(pageNumber, pageSize, resolveSort(orderBy, sortDir));
-        Page<ShopOrderEntity> shopOrderPage = shopOrderRepository.findAllByCompanyId(com.braidsbeautyByAngie.aggregates.constants.Constants.getCompanyIdInSession(), pageable);
+        Page<ShopOrderEntity> shopOrderPage = shopOrderRepository.findAllByCompanyId(companyId, pageable);
 
         List<ResponseShopOrder> responseList = shopOrderPage.getContent().stream()
                 .map(this::mapToResponseShopOrder)

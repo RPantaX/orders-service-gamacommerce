@@ -28,8 +28,8 @@ public class ShopOrderServiceImpl implements ShopOrderServiceIn {
     }
 
     @Override
-    public ShopOrderDTO createShopOrderIn(RequestShopOrder requestShopOrder) {
-        return serviceOut.createShopOrderOut(requestShopOrder);
+    public ShopOrderDTO createShopOrderIn(RequestShopOrder requestShopOrder, Long companyId) {
+        return serviceOut.createShopOrderOut(requestShopOrder, companyId);
     }
 
     @Override

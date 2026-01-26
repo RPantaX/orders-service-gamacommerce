@@ -11,7 +11,7 @@ public interface ShopOrderServiceIn {
 
     void rejectShopOrderIn(Long orderId);
     void aprovedShopOrderIn(Long orderId, BigDecimal paymentTotalPrice , boolean isProduct);
-    ShopOrderDTO createShopOrderIn(RequestShopOrder requestShopOrder);
+    ShopOrderDTO createShopOrderIn(RequestShopOrder requestShopOrder, Long companyId);
     ResponseListPageableShopOrder getShopOrderListIn(int pageNumber, int pageSize, String orderBy, String sortDir);
     ResponseListPageableShopOrder getShopOrderListByCompanyIdIn(int pageNumber, int pageSize, String orderBy, String sortDir, Long companyId);
 

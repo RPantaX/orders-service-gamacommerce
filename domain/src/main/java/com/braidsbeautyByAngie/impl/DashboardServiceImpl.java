@@ -16,22 +16,22 @@ import java.util.List;
 public class DashboardServiceImpl implements DashboardServiceIn {
     private final DashboardServiceOut dashboardServiceOut;
     @Override
-    public DashboardSummaryDTO getDashboardSummaryIn() {
-        return dashboardServiceOut.getDashboardSummaryOut();
+    public DashboardSummaryDTO getDashboardSummaryIn(Long companyId) {
+        return dashboardServiceOut.getDashboardSummaryOut(companyId);
     }
 
     @Override
-    public List<SalesAnalyticsDTO> getSalesAnalyticsIn(String type, String period, LocalDate startDate, LocalDate endDate) {
-        return dashboardServiceOut.getSalesAnalyticsOut(type, period, startDate, endDate);
+    public List<SalesAnalyticsDTO> getSalesAnalyticsIn(String type, String period, LocalDate startDate, LocalDate endDate, Long companyId) {
+        return dashboardServiceOut.getSalesAnalyticsOut(type, period, startDate, endDate, companyId);
     }
 
     @Override
-    public List<TodayTransactionDTO> getTodayTransactionsIn() {
-        return dashboardServiceOut.getTodayTransactionsOut();
+    public List<TodayTransactionDTO> getTodayTransactionsIn(Long companyId) {
+        return dashboardServiceOut.getTodayTransactionsOut(companyId);
     }
 
     @Override
-    public List<TopProductDTO> getTopProductsIn(String period) {
-        return dashboardServiceOut.getTopProductsOut(period);
+    public List<TopProductDTO> getTopProductsIn(String period, Long companyId) {
+        return dashboardServiceOut.getTopProductsOut(period, companyId);
     }
 }

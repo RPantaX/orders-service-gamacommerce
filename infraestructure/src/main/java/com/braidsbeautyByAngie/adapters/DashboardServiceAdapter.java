@@ -39,23 +39,23 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
     private EntityManager entityManager;
 
     @Override
-    public DashboardSummaryDTO getDashboardSummaryOut() {
-        log.info("Generating dashboard summary");
+    public DashboardSummaryDTO getDashboardSummaryOut(Long companyId) {
+        log.info("Generating dashboard summary for company: {}", companyId);
 
         LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1);
         LocalDate endOfMonth = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
 
         // Total sales this month
-        BigDecimal totalSales = calculateTotalSales(startOfMonth, endOfMonth);
+        BigDecimal totalSales = calculateTotalSales(startOfMonth, endOfMonth, companyId);
 
         // In-store orders count (assuming shipping method ID 1 is in-store)
-        Integer inStoreOrders = countInStoreOrders(startOfMonth, endOfMonth);
+        Integer inStoreOrders = countInStoreOrders(startOfMonth, endOfMonth, companyId);
 
         // Online orders percentage
-        Double onlinePercentage = calculateOnlineOrdersPercentage(startOfMonth, endOfMonth);
+        Double onlinePercentage = calculateOnlineOrdersPercentage(startOfMonth, endOfMonth, companyId);
 
         // Star products count (products sold more than average)
-        Integer starProducts = countStarProducts();
+        Integer starProducts = countStarProducts(companyId);
 
         return DashboardSummaryDTO.builder()
                 .totalSalesThisMonth(totalSales)
@@ -66,27 +66,27 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
     }
 
     @Override
-    public List<SalesAnalyticsDTO> getSalesAnalyticsOut(String type, String period, LocalDate startDate, LocalDate endDate) {
-        log.info("Generating sales analytics for type: {}, period: {}", type, period);
+    public List<SalesAnalyticsDTO> getSalesAnalyticsOut(String type, String period, LocalDate startDate, LocalDate endDate, Long companyId) {
+        log.info("Generating sales analytics for type: {}, period: {}, company: {}", type, period, companyId);
 
         List<SalesAnalyticsDTO> analytics = new ArrayList<>();
 
         if (startDate != null && endDate != null) {
             // Custom date range
-            analytics = generateAnalyticsForDateRange(type, startDate, endDate);
+            analytics = generateAnalyticsForDateRange(type, startDate, endDate, companyId);
         } else {
             switch (period.toUpperCase()) {
                 case "WEEKLY":
-                    analytics = generateWeeklyAnalytics(type);
+                    analytics = generateWeeklyAnalytics(type, companyId);
                     break;
                 case "MONTHLY":
-                    analytics = generateMonthlyAnalytics(type);
+                    analytics = generateMonthlyAnalytics(type, companyId);
                     break;
                 case "YEARLY":
-                    analytics = generateYearlyAnalytics(type);
+                    analytics = generateYearlyAnalytics(type, companyId);
                     break;
                 default:
-                    analytics = generateMonthlyAnalytics(type);
+                    analytics = generateMonthlyAnalytics(type, companyId);
             }
         }
 
@@ -94,8 +94,8 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
     }
 
     @Override
-    public List<TodayTransactionDTO> getTodayTransactionsOut() {
-        log.info("Fetching today's transactions");
+    public List<TodayTransactionDTO> getTodayTransactionsOut(Long companyId) {
+        log.info("Fetching today's transactions for company: {}", companyId);
 
         LocalDateTime startOfDay = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS);
         LocalDateTime endOfDay = startOfDay.plusDays(1);
@@ -103,12 +103,14 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
         String jpql = """
             SELECT so FROM ShopOrderEntity so 
             WHERE so.shopOrderDate BETWEEN :startOfDay AND :endOfDay 
+            AND so.companyId = :companyId 
             ORDER BY so.shopOrderDate DESC
             """;
 
         List<ShopOrderEntity> todayOrders = entityManager.createQuery(jpql, ShopOrderEntity.class)
                 .setParameter("startOfDay", java.sql.Timestamp.valueOf(startOfDay))
                 .setParameter("endOfDay", java.sql.Timestamp.valueOf(endOfDay))
+                .setParameter("companyId", companyId)
                 .getResultList();
 
         return todayOrders.stream()
@@ -117,8 +119,8 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
     }
 
     @Override
-    public List<TopProductDTO> getTopProductsOut(String period) {
-        log.info("Fetching top products for period: {}", period);
+    public List<TopProductDTO> getTopProductsOut(String period, Long companyId) {
+        log.info("Fetching top products for period: {}, company: {}", period, companyId);
 
         LocalDate startDate = calculateStartDateByPeriod(period);
         LocalDate endDate = LocalDate.now();
@@ -132,6 +134,7 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
             WHERE ol.product_item_id IS NOT NULL
             AND so.shop_order_date BETWEEN :startDate AND :endDate
             AND so.shop_order_status = 'APPROVED'
+            AND so.company_id = :companyId
             GROUP BY ol.product_item_id
             ORDER BY total_sold DESC
             LIMIT 10
@@ -140,6 +143,7 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
         Query query = entityManager.createNativeQuery(nativeQuery);
         query.setParameter("startDate", java.sql.Date.valueOf(startDate));
         query.setParameter("endDate", java.sql.Date.valueOf(endDate));
+        query.setParameter("companyId", companyId);
 
         @SuppressWarnings("unchecked")
         List<Object[]> results = query.getResultList();
@@ -152,7 +156,7 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
                     try {
                         // Fetch product details from product service
                         List<ResponseProductItemDetail> productDetails = (List<ResponseProductItemDetail>)restProductsAdapter.listItemProductsByIds(List.of(productItemId)).getData();
-                        var productDetail =  productDetails
+                        var productDetail = productDetails
                                 .stream().findFirst().orElse(null);
 
                         if (productDetail != null) {
@@ -181,57 +185,65 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
     }
 
     // Private helper methods
-    private BigDecimal calculateTotalSales(LocalDate startDate, LocalDate endDate) {
+    private BigDecimal calculateTotalSales(LocalDate startDate, LocalDate endDate, Long companyId) {
         String jpql = """
             SELECT COALESCE(SUM(so.shopOrderTotal), 0) FROM ShopOrderEntity so 
             WHERE DATE(so.shopOrderDate) BETWEEN :startDate AND :endDate 
             AND so.shopOrderStatus = :status
+            AND so.companyId = :companyId
             """;
 
         Number result = (Number) entityManager.createQuery(jpql)
                 .setParameter("startDate", startDate)
                 .setParameter("endDate", endDate)
                 .setParameter("status", ShopOrderStatusEnum.APPROVED)
+                .setParameter("companyId", companyId)
                 .getSingleResult();
 
         return result != null ? new BigDecimal(result.toString()) : BigDecimal.ZERO;
     }
 
-    private Integer countInStoreOrders(LocalDate startDate, LocalDate endDate) {
+    private Integer countInStoreOrders(LocalDate startDate, LocalDate endDate, Long companyId) {
         String jpql = """
             SELECT COUNT(so) FROM ShopOrderEntity so 
             WHERE DATE(so.shopOrderDate) BETWEEN :startDate AND :endDate 
             AND so.shoppingMethodEntity.shoppingMethodId = 1
+            AND so.companyId = :companyId
             """;
 
         Number result = (Number) entityManager.createQuery(jpql)
                 .setParameter("startDate", startDate)
                 .setParameter("endDate", endDate)
+                .setParameter("companyId", companyId)
                 .getSingleResult();
 
         return result != null ? result.intValue() : 0;
     }
 
-    private Double calculateOnlineOrdersPercentage(LocalDate startDate, LocalDate endDate) {
+    private Double calculateOnlineOrdersPercentage(LocalDate startDate, LocalDate endDate, Long companyId) {
         String totalOrdersJpql = """
             SELECT COUNT(so) FROM ShopOrderEntity so 
             WHERE DATE(so.shopOrderDate) BETWEEN :startDate AND :endDate
+            AND so.companyId = :companyId
             """;
 
         String onlineOrdersJpql = """
             SELECT COUNT(so) FROM ShopOrderEntity so 
             WHERE DATE(so.shopOrderDate) BETWEEN :startDate AND :endDate 
             AND so.shoppingMethodEntity.shoppingMethodId != 1
+            AND so.companyId = :companyId
             """;
 
         Number totalOrders = (Number) entityManager.createQuery(totalOrdersJpql)
                 .setParameter("startDate", startDate)
                 .setParameter("endDate", endDate)
+                .setParameter("companyId", companyId)
                 .getSingleResult();
 
         Number onlineOrders = (Number) entityManager.createQuery(onlineOrdersJpql)
                 .setParameter("startDate", startDate)
                 .setParameter("endDate", endDate)
+                .setParameter("companyId", companyId)
                 .getSingleResult();
 
         if (totalOrders.intValue() == 0) return 0.0;
@@ -239,18 +251,22 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
         return (onlineOrders.doubleValue() / totalOrders.doubleValue()) * 100;
     }
 
-    private Integer countStarProducts() {
-        // Products that sold more than average
+    private Integer countStarProducts(Long companyId) {
+        // Products that sold more than average for this company
         String avgQuery = """
             SELECT AVG(total_sold) FROM (
                 SELECT SUM(ol.order_line_quantity) as total_sold
                 FROM order_line ol
+                INNER JOIN shop_order so ON ol.shop_order_id = so.shop_order_id
                 WHERE ol.product_item_id IS NOT NULL
+                AND so.company_id = :companyId
                 GROUP BY ol.product_item_id
             ) as subquery
             """;
 
-        Number avgSold = (Number) entityManager.createNativeQuery(avgQuery).getSingleResult();
+        Number avgSold = (Number) entityManager.createNativeQuery(avgQuery)
+                .setParameter("companyId", companyId)
+                .getSingleResult();
 
         if (avgSold == null) return 0;
 
@@ -258,20 +274,23 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
             SELECT COUNT(*) FROM (
                 SELECT ol.product_item_id
                 FROM order_line ol
+                INNER JOIN shop_order so ON ol.shop_order_id = so.shop_order_id
                 WHERE ol.product_item_id IS NOT NULL
+                AND so.company_id = :companyId
                 GROUP BY ol.product_item_id
                 HAVING SUM(ol.order_line_quantity) > :avgSold
             ) as star_products
             """;
 
         Number result = (Number) entityManager.createNativeQuery(countQuery)
+                .setParameter("companyId", companyId)
                 .setParameter("avgSold", avgSold)
                 .getSingleResult();
 
         return result != null ? result.intValue() : 0;
     }
 
-    private List<SalesAnalyticsDTO> generateMonthlyAnalytics(String type) {
+    private List<SalesAnalyticsDTO> generateMonthlyAnalytics(String type, Long companyId) {
         List<SalesAnalyticsDTO> analytics = new ArrayList<>();
         LocalDate now = LocalDate.now();
 
@@ -280,14 +299,14 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
             LocalDate startOfMonth = yearMonth.atDay(1);
             LocalDate endOfMonth = yearMonth.atEndOfMonth();
 
-            SalesAnalyticsDTO dto = calculateAnalyticsForPeriod(type, startOfMonth, endOfMonth, yearMonth.getMonth().name().substring(0, 3));
+            SalesAnalyticsDTO dto = calculateAnalyticsForPeriod(type, startOfMonth, endOfMonth, yearMonth.getMonth().name().substring(0, 3), companyId);
             analytics.add(dto);
         }
 
         return analytics;
     }
 
-    private List<SalesAnalyticsDTO> generateWeeklyAnalytics(String type) {
+    private List<SalesAnalyticsDTO> generateWeeklyAnalytics(String type, Long companyId) {
         List<SalesAnalyticsDTO> analytics = new ArrayList<>();
         LocalDate now = LocalDate.now();
 
@@ -295,14 +314,14 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
             LocalDate weekStart = now.minusWeeks(i).minusDays(now.minusWeeks(i).getDayOfWeek().getValue() - 1);
             LocalDate weekEnd = weekStart.plusDays(6);
 
-            SalesAnalyticsDTO dto = calculateAnalyticsForPeriod(type, weekStart, weekEnd, "Week " + (12 - i));
+            SalesAnalyticsDTO dto = calculateAnalyticsForPeriod(type, weekStart, weekEnd, "Week " + (12 - i), companyId);
             analytics.add(dto);
         }
 
         return analytics;
     }
 
-    private List<SalesAnalyticsDTO> generateYearlyAnalytics(String type) {
+    private List<SalesAnalyticsDTO> generateYearlyAnalytics(String type, Long companyId) {
         List<SalesAnalyticsDTO> analytics = new ArrayList<>();
         LocalDate now = LocalDate.now();
 
@@ -310,14 +329,14 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
             LocalDate yearStart = LocalDate.of(now.getYear() - i, 1, 1);
             LocalDate yearEnd = LocalDate.of(now.getYear() - i, 12, 31);
 
-            SalesAnalyticsDTO dto = calculateAnalyticsForPeriod(type, yearStart, yearEnd, String.valueOf(now.getYear() - i));
+            SalesAnalyticsDTO dto = calculateAnalyticsForPeriod(type, yearStart, yearEnd, String.valueOf(now.getYear() - i), companyId);
             analytics.add(dto);
         }
 
         return analytics;
     }
 
-    private List<SalesAnalyticsDTO> generateAnalyticsForDateRange(String type, LocalDate startDate, LocalDate endDate) {
+    private List<SalesAnalyticsDTO> generateAnalyticsForDateRange(String type, LocalDate startDate, LocalDate endDate, Long companyId) {
         long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
         List<SalesAnalyticsDTO> analytics = new ArrayList<>();
 
@@ -325,7 +344,7 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
             // Daily breakdown
             LocalDate current = startDate;
             while (!current.isAfter(endDate)) {
-                SalesAnalyticsDTO dto = calculateAnalyticsForPeriod(type, current, current, current.toString());
+                SalesAnalyticsDTO dto = calculateAnalyticsForPeriod(type, current, current, current.toString(), companyId);
                 analytics.add(dto);
                 current = current.plusDays(1);
             }
@@ -342,7 +361,7 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
                 if (monthStart.isBefore(startDate)) monthStart = startDate;
                 if (monthEnd.isAfter(endDate)) monthEnd = endDate;
 
-                SalesAnalyticsDTO dto = calculateAnalyticsForPeriod(type, monthStart, monthEnd, current.getMonth().name().substring(0, 3));
+                SalesAnalyticsDTO dto = calculateAnalyticsForPeriod(type, monthStart, monthEnd, current.getMonth().name().substring(0, 3), companyId);
                 analytics.add(dto);
                 current = current.plusMonths(1);
             }
@@ -351,39 +370,44 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
         return analytics;
     }
 
-    private SalesAnalyticsDTO calculateAnalyticsForPeriod(String type, LocalDate startDate, LocalDate endDate, String periodName) {
+    private SalesAnalyticsDTO calculateAnalyticsForPeriod(String type, LocalDate startDate, LocalDate endDate, String periodName, Long companyId) {
         String productOrdersQuery = """
             SELECT COUNT(DISTINCT so.shop_order_id) FROM shop_order so
             INNER JOIN order_line ol ON so.shop_order_id = ol.shop_order_id
             WHERE DATE(so.shop_order_date) BETWEEN :startDate AND :endDate
             AND ol.product_item_id IS NOT NULL
+            AND so.company_id = :companyId
             """;
 
         String serviceOrdersQuery = """
             SELECT COUNT(DISTINCT so.shop_order_id) FROM shop_order so
             INNER JOIN order_line ol ON so.shop_order_id = ol.shop_order_id
             WHERE DATE(so.shop_order_date) BETWEEN :startDate AND :endDate
-            AND ol.reservation_id IS NOT NULL
+            AND so.company_id = :companyId
             """;
 
         String totalOrdersQuery = """
             SELECT COUNT(so.shop_order_id) FROM shop_order so
             WHERE DATE(so.shop_order_date) BETWEEN :startDate AND :endDate
+            AND so.company_id = :companyId
             """;
 
         Number productOrders = (Number) entityManager.createNativeQuery(productOrdersQuery)
                 .setParameter("startDate", java.sql.Date.valueOf(startDate))
                 .setParameter("endDate", java.sql.Date.valueOf(endDate))
+                .setParameter("companyId", companyId)
                 .getSingleResult();
 
         Number serviceOrders = (Number) entityManager.createNativeQuery(serviceOrdersQuery)
                 .setParameter("startDate", java.sql.Date.valueOf(startDate))
                 .setParameter("endDate", java.sql.Date.valueOf(endDate))
+                .setParameter("companyId", companyId)
                 .getSingleResult();
 
         Number totalOrders = (Number) entityManager.createNativeQuery(totalOrdersQuery)
                 .setParameter("startDate", java.sql.Date.valueOf(startDate))
                 .setParameter("endDate", java.sql.Date.valueOf(endDate))
+                .setParameter("companyId", companyId)
                 .getSingleResult();
 
         return SalesAnalyticsDTO.builder()
@@ -396,7 +420,7 @@ public class DashboardServiceAdapter implements DashboardServiceOut {
 
     private TodayTransactionDTO mapToTodayTransactionDTO(ShopOrderEntity order) {
         String orderType = determineOrderType(order);
-        String customerName = "Customer #" + order.getUserId(); // You might want to fetch actual customer name
+        String customerName = "Customer #" + order.getUserId();
 
         return TodayTransactionDTO.builder()
                 .orderId("#" + order.getShopOrderId())

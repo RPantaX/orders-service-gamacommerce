@@ -9,8 +9,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface DashboardServiceOut {
-    DashboardSummaryDTO getDashboardSummaryOut();
-    List<SalesAnalyticsDTO> getSalesAnalyticsOut(String type, String period, LocalDate startDate, LocalDate endDate);
-    List<TodayTransactionDTO> getTodayTransactionsOut();
-    List<TopProductDTO> getTopProductsOut(String period);
+    DashboardSummaryDTO getDashboardSummaryOut(Long companyId);
+    List<SalesAnalyticsDTO> getSalesAnalyticsOut(String type, String period, LocalDate startDate, LocalDate endDate, Long companyId);
+    List<TodayTransactionDTO> getTodayTransactionsOut(Long companyId);
+    List<TopProductDTO> getTopProductsOut(String period, Long companyId);
 }
