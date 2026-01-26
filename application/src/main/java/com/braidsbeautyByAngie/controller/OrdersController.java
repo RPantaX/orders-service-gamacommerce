@@ -48,9 +48,9 @@ public class OrdersController {
     }
 
     @Operation(summary = "Generate order")
-    @RequestMapping()
-    public ResponseEntity<ApiResponse> generateOrder(@RequestBody RequestShopOrder requestShopOrder){
-        return new ResponseEntity<>(ApiResponse.create("Order created", service.createShopOrderIn(requestShopOrder)), HttpStatus.CREATED);
+    @RequestMapping("/company/{companyId}")
+    public ResponseEntity<ApiResponse> generateOrder(@RequestBody RequestShopOrder requestShopOrder, @PathVariable(name = "companyId") Long companyId){
+        return new ResponseEntity<>(ApiResponse.create("Order created", service.createShopOrderIn(requestShopOrder, companyId)), HttpStatus.CREATED);
     }
 
     @GetMapping(value = "/{shopOrderId}")

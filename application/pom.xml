@@ -45,10 +45,22 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <!-- IMPORTANTE: comentado los siguiente para que docker lo reconozca y cree el contenedor -->
-                <!--<configuration>
-                    <skip>true</skip>
-                </configuration>-->
+                <configuration>
+                    <mainClass>com.braidsbeautyByAngie.OrdersServiceApplication</mainClass>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

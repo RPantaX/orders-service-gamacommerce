@@ -8,7 +8,6 @@ import com.braidsbeautyByAngie.aggregates.dto.ShoppingMethodDTO;
 import com.braidsbeautyByAngie.aggregates.response.ResponseShopOrderDetail;
 import com.braidsbeautyByAngie.aggregates.response.rest.payments.PaymentDTO;
 import com.braidsbeautyByAngie.aggregates.response.rest.products.ResponseProductItemDetail;
-import com.braidsbeautyByAngie.aggregates.response.rest.reservations.ResponseReservationDetail;
 import com.braidsbeautyByAngie.aggregates.types.OrderLineStatusEnum;
 import com.braidsbeautyByAngie.aggregates.types.ShopOrderStatusEnum;
 import com.braidsbeautyByAngie.ports.out.ShopOrderServiceOut;
@@ -36,7 +35,6 @@ import com.braidsbeautyByAngie.repository.ShoppingMethodRepository;
 
 import com.braidsbeautyByAngie.rest.RestPaymentAdapter;
 import com.braidsbeautyByAngie.rest.RestProductsAdapter;
-import com.braidsbeautyByAngie.rest.RestServicesAdapter;
 import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.Constants;
 import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.events.OrderApprovedEvent;
 import pe.com.gamacommerce.corelibraryservicegamacommerce.aggregates.aggregates.events.OrderCreatedEvent;
@@ -79,7 +77,6 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
     private final AddressMapper addressMapper;
 
     private final RestProductsAdapter restProductsAdapter;
-    private final RestServicesAdapter restServicesAdapter;
     private final RestPaymentAdapter restPaymentAdapter;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -93,26 +90,26 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
     }
 
     @Override
-    public void aprovedShopOrderOut(Long orderId, BigDecimal paymentTotalPrice, boolean isProduct, boolean isService) {
+    public void aprovedShopOrderOut(Long orderId, BigDecimal paymentTotalPrice, boolean isProduct) {
         ShopOrderEntity shopOrderEntity = fetchShopOrderById(orderId);
         shopOrderEntity.setShopOrderStatus(ShopOrderStatusEnum.APPROVED);
         shopOrderEntity.setShopOrderTotal(paymentTotalPrice);
         shopOrderRepository.save(shopOrderEntity);
-        sendOrderApprovedEvent(shopOrderEntity, isProduct, isService);
+        sendOrderApprovedEvent(shopOrderEntity, isProduct);
         log.info("Shop Order Approved: {}", shopOrderEntity);
     }
 
     @Transactional
     @Override
-    public ShopOrderDTO createShopOrderOut(RequestShopOrder requestShopOrder) {
+    public ShopOrderDTO createShopOrderOut(RequestShopOrder requestShopOrder, Long companyId) {
         log.info("Creating Shop Order: {}", requestShopOrder);
         ShopOrderEntity shopOrderEntity = new ShopOrderEntity();
         shopOrderEntity.setShopOrderDate(Constants.getTimestamp());
         shopOrderEntity.setCreatedAt(Constants.getTimestamp());
-        shopOrderEntity.setModifiedByUser(com.braidsbeautyByAngie.aggregates.constants.Constants.getUserInSession());
+        shopOrderEntity.setModifiedByUser("SYSTEM");
         shopOrderEntity.setUserId(requestShopOrder.getUserId());
         shopOrderEntity.setShopOrderStatus(ShopOrderStatusEnum.CREATED);
-        shopOrderEntity.setCompanyId(com.braidsbeautyByAngie.aggregates.constants.Constants.getCompanyIdInSession());
+        shopOrderEntity.setCompanyId(companyId);
         ShoppingMethodEntity shoppingMethod = fetchShoppingMethod(requestShopOrder.getShoppingMethodId());
         shopOrderEntity.setShoppingMethodEntity(shoppingMethod);
 
@@ -166,7 +163,7 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
     public ResponseListPageableShopOrder getShopOrderListByCompanyIdOut(int pageNumber, int pageSize, String orderBy, String sortDir, Long companyId) {
         log.info("Fetching Shop Order List");
         Pageable pageable = PageRequest.of(pageNumber, pageSize, resolveSort(orderBy, sortDir));
-        Page<ShopOrderEntity> shopOrderPage = shopOrderRepository.findAllByCompanyId(com.braidsbeautyByAngie.aggregates.constants.Constants.getCompanyIdInSession(), pageable);
+        Page<ShopOrderEntity> shopOrderPage = shopOrderRepository.findAllByCompanyId(companyId, pageable);
 
         List<ResponseShopOrder> responseList = shopOrderPage.getContent().stream()
                 .map(this::mapToResponseShopOrder)
@@ -226,18 +223,6 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
             }
 
         }
-        Long reservationId = orderLineDTOList.stream().filter(orderLineDTO -> orderLineDTO.getReservationId() != null).findFirst().map(OrderLineDTO::getReservationId).orElse(null);
-        if(reservationId != null && reservationId > 0) {
-            try {
-                log.info("Fetching Reservation by Id: {}", reservationId);
-                ResponseReservationDetail responseReservationDetail = restServicesAdapter.listReservationById(reservationId).getData();
-                responseShopOrderDetail.setResponseReservationDetail(responseReservationDetail);
-                log.info("Reservation fetched successfully: {}", responseReservationDetail);
-            } catch (Exception e){
-                log.error("Error fetching Reservation by Id: {}", e.getMessage());
-            }
-
-        }
         return responseShopOrderDetail;
     }
 
@@ -292,7 +277,7 @@ public class ShopOrderServiceAdapter implements ShopOrderServiceOut {
                 .orderLineState(OrderLineStatusEnum.CREATED)
                 .build();
     }
-    private void sendOrderApprovedEvent(ShopOrderEntity shopOrderEntity, boolean isProduct, boolean isService) {
+    private void sendOrderApprovedEvent(ShopOrderEntity shopOrderEntity, boolean isProduct) {
 
         OrderApprovedEvent event = OrderApprovedEvent.builder()
                 .shopOrderId(shopOrderEntity.getShopOrderId())
